@@ -1,0 +1,22 @@
+﻿@using Matplan.Shared.EntityDtos
+<table class="table">
+	<thead>
+		<tr>
+			<th>Name</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var art in Artiklar!)
+		{
+			<tr>
+				<td>@art.ART_ArtikelNamn</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+
+@code {
+	[Parameter] public List<ArtikelDto>? Artiklar { get; set; }
+
+}

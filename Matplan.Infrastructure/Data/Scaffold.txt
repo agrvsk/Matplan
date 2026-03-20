@@ -1,0 +1,6 @@
+Scaffold-DbContext "Server=(localdb)\MSSQLLocalDB;Database=MATPLAN;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;" 
+Microsoft.EntityFrameworkCore.SqlServer 
+-OutputDir Models 
+-ContextDir Data 
+-Context MatplanDbContext 
+-UseDatabaseNames -NoPluralize

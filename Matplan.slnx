@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/API/">
+    <Project Path="Matplan.API/Matplan.API.csproj" />
+    <Project Path="Matplan.EntityContracts/Matplan.EntityContracts.csproj" Id="5f1787b0-6553-4511-b3b6-7f95e1700f64">
+      <BuildDependency Project="Matplan.EntityModels/Matplan.EntityModels.csproj" />
+    </Project>
+    <Project Path="Matplan.EntityModels/Matplan.EntityModels.csproj" Id="46c78d2d-0245-4ed3-b0a4-611ef300d6d5" />
+    <Project Path="Matplan.Infrastructure/Matplan.Infrastructure.csproj" Id="e3d07844-eec7-496b-8aa4-2c8968c92b06">
+      <BuildDependency Project="Matplan.EntityModels/Matplan.EntityModels.csproj" />
+    </Project>
+    <Project Path="Matplan.Services.Contracts/Matplan.Services.Contracts.csproj" Id="fbc01f98-99ad-4f85-81f1-1b2c6021560a" />
+    <Project Path="Matplan.Services/Matplan.Services.csproj" Id="4609ef4b-82f6-4146-8a30-cff6bf2f3db8" />
+  </Folder>
+  <Folder Name="/UI/">
+    <Project Path="Matplan.Blazor/Matplan.Blazor.Client/Matplan.Blazor.Client.csproj" Id="13f4ec59-f4b6-4dad-972c-7528a8355b1c" />
+    <Project Path="Matplan.Blazor/Matplan.Blazor/Matplan.Blazor.csproj" Id="6d2c278c-381b-4ee5-895e-767b88c5ea1e" />
+  </Folder>
+  <Project Path="Matplan.Shared/Matplan.Shared.csproj" Id="17cdad50-e073-4d2f-a97b-812302013a2e" />
+</Solution>

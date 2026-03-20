@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
+
+	  <PackageReference Include="AutoMapper" Version="16.1.1" />
+	  <ProjectReference Include="..\Matplan.EntityContracts\Matplan.EntityContracts.csproj" />
+    <ProjectReference Include="..\Matplan.Services.Contracts\Matplan.Services.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

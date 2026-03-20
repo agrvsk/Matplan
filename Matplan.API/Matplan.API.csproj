@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-Matplan.API-92f3a809-5de1-4c9b-9f98-24b8ef290a17</UserSecretsId>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" NoWarn="NU1605" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.2" NoWarn="NU1605" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.3.0" />
+    <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="4.3.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="1.6.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="AutoMapper" Version="16.1.1" />
+	  <ProjectReference Include="..\Matplan.EntityContracts\Matplan.EntityContracts.csproj" />
+    <ProjectReference Include="..\Matplan.Infrastructure\Matplan.Infrastructure.csproj" />
+    <ProjectReference Include="..\Matplan.Services.Contracts\Matplan.Services.Contracts.csproj" />
+    <ProjectReference Include="..\Matplan.Services\Matplan.Services.csproj" />
+  </ItemGroup>
+
+
+</Project>

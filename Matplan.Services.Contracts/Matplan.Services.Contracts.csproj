@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Matplan.EntityModels\Matplan.EntityModels.csproj" />
+    <ProjectReference Include="..\Matplan.Shared\Matplan.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

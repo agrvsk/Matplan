@@ -1,0 +1,27 @@
+﻿@using Matplan.Shared.KodtabellDtos
+<div>
+    <label class="form-label">Varugrupp</label>
+    <select class="form-select" value="@SelectedValue" @onchange="OnChanged">
+            <option value="">Alla</option>
+
+        @if (Varugrupper != null)
+        @foreach (var grp in Varugrupper)
+        {
+            <option value="@grp.Storedpfu">@grp.Displayed</option>
+        }
+    </select>
+</div>
+
+@code 
+{
+    [Parameter] public List<KodtabellStringDto> Varugrupper { get; set; } = [];
+    [Parameter] public string? SelectedValue { get; set; }
+    [Parameter] public EventCallback<string?> SelectedValueChanged { get; set; }
+
+    private async Task OnChanged(ChangeEventArgs e)
+    {
+        SelectedValue = e.Value?.ToString();
+        await SelectedValueChanged.InvokeAsync(SelectedValue);
+    }
+
+}

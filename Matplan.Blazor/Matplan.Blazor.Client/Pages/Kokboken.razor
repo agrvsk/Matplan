@@ -1,0 +1,237 @@
+﻿@page "/kokboken"
+@using Matplan.Blazor.Client.Models
+@using Matplan.Blazor.Client.Services
+@using Matplan.Shared.EntityDtos
+@using Matplan.Shared.KodtabellDtos
+@using Matplan.Shared.Paginering
+@using Matplan.Blazor.Client.Components
+@using Matplan.Shared.Requests
+@using Microsoft.AspNetCore.WebUtilities
+
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Kokboken</PageTitle>
+<p>@(OperatingSystem.IsBrowser() ? "Kör i klienten" : "Kör på servern")</p>
+
+<h1>Kokboken</h1>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+	<div class="alert alert-danger" role="alert">
+		<p>@errorMessage</p>
+	</div>
+}
+@if (Loading)
+{
+	<SkeletonTable Rows="10" Columns="1" />
+}
+else if(Artiklar != null)
+{
+	<button class="btn btn-outline-primary"
+			data-bs-toggle="offcanvas"
+			data-bs-target="#filterPanel">
+		Filter
+	</button>
+
+	<FilterPanel PanelId="filterPanel" Title="Urvalskriterier">
+
+		<VarugruppFilter Varugrupper="Varugrupper"
+						 @bind-SelectedValue="SelectedVarugrupp" 
+						 />
+
+@* 		<div class="mb-3">
+			<label class="form-label">Kategori</label>
+			<select class="form-select" @bind="SelectedCategory">
+				<option value="">Alla</option>
+				<option value="A">Kategori A</option>
+				<option value="B">Kategori B</option>
+			</select>
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Prisintervall</label>
+			<input type="range" class="form-range" @bind="PriceLimit" min="0" max="1000" />
+			<div>Max: @PriceLimit kr</div>
+		</div>
+		*@
+		
+		<button class="btn btn-primary w-100" @onclick="ApplyFilters" data-bs-dismiss="offcanvas" >
+			Använd filter
+		</button>
+ 
+	</FilterPanel>
+
+
+
+	<Pager Meta="@meta" Params="@Params"  OnPageChanged="LoadPage" />
+	<ViewState CurrentView="@CurrentView" OnViewChanged="ChangeView"/>
+
+	@if (CurrentView == ViewMode.Card)
+	{
+		<ArtikelCards Artiklar="@Artiklar" />
+	}
+	else
+	{
+		<ArtikelList Artiklar="@Artiklar" />
+	}
+}
+else
+{
+	<p>Inga artiklar?...</p>	
+}
+
+
+@code 
+{
+	public bool Loading { get; set; } = true;
+	private ViewMode CurrentView = ViewMode.List;
+
+	[Inject]
+	private IApiService myApi { get; set; } = default!;
+	[Inject]
+	private ILookupService _LookupService { get; set; } = default!;
+
+	private List<ArtikelDto>? Artiklar { get; set; }
+	private List<KodtabellStringDto>? Varugrupper { get; set; }
+	private MetaData? meta;
+
+	private string? errorMessage;
+	private string? SelectedVarugrupp;
+	private ArtikelRequestParams Params=null!;
+
+	private ArtikelRequestParams DefaultParam()
+	{
+		return new ArtikelRequestParams()
+		{
+			PageNumber = 1,
+			PageSize = 10
+		};
+	}
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			//Params = DefaultParam();
+			await LaddaFilterData();   // Lookup laddas i klienten
+			await LaddaArtiklar();
+		}
+	}
+
+	private void ChangeView(ViewMode newView)
+	{
+		CurrentView = newView;
+		StateHasChanged();
+	}
+
+	private async Task ApplyFilters()
+	{
+		Params = DefaultParam();
+
+		if (SelectedVarugrupp != null)
+			Params.Varugrupp = SelectedVarugrupp;
+		//Console.WriteLine("Apply filters with varugrupp: " + SelectedVarugrupp);
+		// Här skulle du normalt sett anropa en metod som uppdaterar artiklarna baserat på de valda filtren.
+		// För demonstration, vi laddar om artiklarna utan att använda filterparametrar.
+		await LoadPage(Params);
+	}
+
+
+	private async Task LaddaArtiklar()
+	{
+		try
+		{
+			Loading = true;
+			StateHasChanged();
+			Params = DefaultParam();
+			// ArtikelRequestParams Params = new()
+			// {
+			// 	PageNumber = 1,
+			// 	PageSize = 10,
+			// //	Varugrupp = SelectedVarugrupp
+			// };
+			await LoadPage(Params);
+		}
+		catch (HttpRequestException apiEx)
+		{
+			errorMessage = $"API Error: {apiEx.StatusCode} - {apiEx.Message}";
+			Console.WriteLine("there was an API error: " + apiEx.Message);
+		}
+		finally
+		{
+			Loading = false;
+			StateHasChanged();
+		}
+
+
+	}
+
+
+	private async Task LoadPage(ArtikelRequestParams Params) //, int pageNumber 
+	{
+		try
+		{
+			var queryParams = new Dictionary<string, string?>
+			{
+				["pageNumber"] = Params.PageNumber.ToString(),
+				["pageSize"] = Params.PageSize.ToString()
+			};
+
+			if (!string.IsNullOrWhiteSpace(Params.Varugrupp))
+			{
+				queryParams["Varugrupp"] = Params.Varugrupp;
+			}
+
+
+
+			var uri = QueryHelpers.AddQueryString("api/Artikel", queryParams);
+			var result = await myApi.CallApiGetAsync<PagedResponse<ArtikelDto>>(uri);
+
+			// var result = await myApi.CallApiGetAsync<PagedResponse<ArtikelDto>>(
+			// 	$"api/Artikel?pageNumber={Params.PageNumber}&pageSize={Params.PageSize}");
+
+			Artiklar = result?.Items.ToList();
+			meta = result?.MetaData;
+		}
+		catch (HttpRequestException apiEx)
+		{
+			errorMessage = $"API Error: {apiEx.StatusCode} - {apiEx.Message}";
+			Console.WriteLine("API error: " + apiEx.Message);
+		}
+	}
+
+
+	private async Task LaddaFilterData()
+	{
+		try
+		{
+			//Loading = true;
+			//StateHasChanged();
+			await LoadFilter();
+		}
+		catch (HttpRequestException apiEx)
+		{
+			errorMessage = $"API Error: {apiEx.StatusCode} - {apiEx.Message}";
+			Console.WriteLine("there was an API error: " + apiEx.Message);
+		}
+		finally
+		{
+			//Loading = false;
+			//StateHasChanged();
+		}
+	}
+
+	private async Task LoadFilter()
+	{
+		try
+		{
+			var result = await _LookupService.GetCategoriesAsync2();
+			Varugrupper = result?.ToList();
+		}
+		catch (HttpRequestException apiEx)
+		{
+			errorMessage = $"API Error: {apiEx.StatusCode} - {apiEx.Message}";
+			Console.WriteLine("API error: " + apiEx.Message);
+		}
+	}
+
+
+}

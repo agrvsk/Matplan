@@ -1,0 +1,36 @@
+﻿@using Matplan.Blazor.Client.Models
+
+<div class="view-switch">
+	<button class="btn" @attributes="ViewStateListAttributes"
+			@onclick="() => ChangeView(ViewMode.List)">
+		Lista
+	</button>
+
+	<button class="btn" @attributes="ViewStateCardAttributes"
+			@onclick="() => ChangeView(ViewMode.Card)">
+		Kort
+	</button>
+</div>
+
+@code 
+{
+	[Parameter] public ViewMode CurrentView { get; set; }
+	[Parameter] public EventCallback<ViewMode> OnViewChanged { get; set; }
+
+	private Dictionary<string, object?> ViewStateListAttributes =>
+	(CurrentView == ViewMode.List)
+	? new() { { "disabled", "disabled" } }
+	: new();
+
+	private Dictionary<string, object?> ViewStateCardAttributes =>
+	(CurrentView == ViewMode.Card)
+	? new() { { "disabled", "disabled" } }
+	: new();
+
+	private void ChangeView(ViewMode viewMode)
+	{
+		OnViewChanged.InvokeAsync(viewMode);
+		StateHasChanged();
+	}
+
+}

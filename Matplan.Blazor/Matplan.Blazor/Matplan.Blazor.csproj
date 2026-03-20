@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>a26559e7-6d07-4c37-85a2-70e59bc7ff75</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Matplan.Shared\Matplan.Shared.csproj" />
+    <ProjectReference Include="..\Matplan.Blazor.Client\Matplan.Blazor.Client.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,197 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
+using System.Text.Json;
+using Matplan.Blazor.Client.Models;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using System.Diagnostics;
+
+namespace Matplan.Blazor.Client.Services;
+
+public class ClientApiService(IHttpClientFactory httpClientFactory, NavigationManager navigationManager, IAuthReadyService authReady) : IApiService
+{
+    private readonly HttpClient httpClient = httpClientFactory.CreateClient("BffClient");
+
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    public async Task<T?> CallApiGetAsync<T>(string endpoint, CancellationToken ct = default)
+    {
+        Console.WriteLine("try");
+        //await authReady.WaitAsync();
+
+        //var encoded = Uri.EscapeDataString(endpoint);
+        endpoint = endpoint.Replace("?", "&");
+
+        var sw = Stopwatch.StartNew();
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"proxy?endpoint={endpoint}");
+        var response = await httpClient.SendAsync(requestMessage, ct);
+
+        sw.Stop();
+        Console.WriteLine($"Metoden tog {sw.ElapsedMilliseconds} ms");
+
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden
+           || response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            navigationManager.NavigateTo("AccessDenied");
+        }
+
+        //Handle customized errors
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            var errorJson = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(errorJson);
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var demoDtos = await JsonSerializer.DeserializeAsync<T>(await response.Content.ReadAsStreamAsync(), _jsonSerializerOptions, CancellationToken.None) ?? default;
+        return demoDtos;
+    }
+    public async Task<TResponse?> CallApiPostAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken ct = default)
+    {
+        await authReady.WaitAsync();
+
+        var json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
+
+        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var response = await httpClient.PostAsync($"proxy?endpoint={endpoint}", content, ct);
+
+        //Handle customized errors
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var errorJson = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(errorJson))
+            {
+                //ModelState
+                var errors = JsonSerializer.Deserialize<Dictionary<string, string[]>>(errorJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (errors != null)
+                {
+                    var rrr = errors.FirstOrDefault();
+                    Console.WriteLine($"{rrr.Key}: {string.Join(", ", rrr.Value)}");
+                    throw new ValidationException(string.Join(", ", rrr.Value));
+                }
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        // Deserialize response
+        var result = await JsonSerializer.DeserializeAsync<TResponse>(
+            await response.Content.ReadAsStreamAsync(),
+            _jsonSerializerOptions,
+            CancellationToken.None
+        );
+
+        return result;
+    }
+    public async Task<TResponse?> CallApiPostMultipartAsync<TResponse>(string endpoint, MultipartFormDataContent data, CancellationToken ct = default)
+    {
+        await authReady.WaitAsync();
+        var response = await httpClient.PostAsync($"proxy/upload?endpoint={endpoint}", data, ct);
+
+        //Handle customized errors
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var errorJson = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(errorJson))
+            {
+                //ModelState
+                var errors = JsonSerializer.Deserialize<Dictionary<string, string[]>>(errorJson,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (errors != null)
+                {
+                    var rrr = errors.FirstOrDefault();
+                    Console.WriteLine($"{rrr.Key}: {string.Join(", ", rrr.Value)}");
+                    throw new ValidationException(string.Join(", ", rrr.Value));
+                }
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var result = await JsonSerializer.DeserializeAsync<TResponse>(
+            await response.Content.ReadAsStreamAsync(),
+            _jsonSerializerOptions,
+            CancellationToken.None
+        );
+        return result;
+    }
+
+    public async Task<TResponse?> CallApiPutAsync<TRequest, TResponse>(string endpoint, TRequest data, CancellationToken ct = default)
+    {
+        await authReady.WaitAsync();
+
+        var json = JsonSerializer.Serialize(data, _jsonSerializerOptions);
+
+        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+        var response = await httpClient.PutAsync($"proxy?endpoint={endpoint}", content, ct);
+
+        //Handle customized errors
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var errorJson = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrEmpty(errorJson))
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(errorJson);
+                    if (doc.RootElement.TryGetProperty("errors", out var errorsProp))
+                    {
+                        var errors = JsonSerializer.Deserialize<Dictionary<string, string[]>>(
+                            errorsProp.GetRawText(),
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                        );
+
+                        if (errors != null && errors.Any())
+                        {
+                            var first = errors.First();
+                            Console.WriteLine($"{first.Key}: {string.Join(", ", first.Value)}");
+                            throw new ValidationException(string.Join(", ", first.Value));
+                        }
+                    }
+                    else
+                    {
+                        // fallback: throw the entire body
+                        throw new ValidationException($"API validation error: {errorJson}");
+                    }
+                }
+                catch (JsonException)
+                {
+                    throw new ValidationException($"API returned bad request: {errorJson}");
+                }
+            }
+        }
+
+
+        response.EnsureSuccessStatusCode();
+
+        // Deserialize response
+        var result = await JsonSerializer.DeserializeAsync<TResponse>(
+            await response.Content.ReadAsStreamAsync(),
+            _jsonSerializerOptions,
+            CancellationToken.None
+        );
+
+        return result;
+    }
+
+
+    public async Task<bool> CallApiDeleteAsync(string endpoint, CancellationToken ct = default)
+    {
+        await authReady.WaitAsync();
+
+        var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"proxy?endpoint={endpoint}");
+        var response = await httpClient.SendAsync(requestMessage, ct);
+
+        return response.IsSuccessStatusCode;
+    }
+
+}

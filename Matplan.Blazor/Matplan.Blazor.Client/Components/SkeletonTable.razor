@@ -1,0 +1,30 @@
+﻿<div class="skeleton-table">
+    <table class="table">
+        <thead>
+            <tr>
+                @for(int c=0; c < Columns; c++)
+                {
+                    <th><div class="skeleton skeleton-header"></div></th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for(int r = 0; r < Rows; r++)
+            {
+                <tr>
+                    @for(int c = 0; c < Columns; c++)
+                    {
+                        <td>
+                            <div class= "skeleton skeleton-row" ></div>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@code 
+{
+    [Parameter] public int Rows { get; set; } = 10;
+    [Parameter] public int Columns { get; set; } = 1;
+}

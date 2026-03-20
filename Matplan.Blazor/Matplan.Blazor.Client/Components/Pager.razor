@@ -1,0 +1,100 @@
+﻿@using Matplan.Shared.Paginering
+@using Matplan.Shared.Requests
+
+<div class="pager">
+
+    <button @onclick="OnFirstClicked" @attributes="PreviousButtonAttributes">
+        @(" |< ")
+    </button>
+
+    <button @onclick="OnPreviousClicked" @attributes="PreviousButtonAttributes">
+        @(" < ")
+    </button>
+
+    <span class="page-indicator">@Meta?.CurrentPage / @Meta?.TotalPages</span>
+
+    <button @onclick="OnNextClicked" @attributes="NextButtonAttributes">
+        @(" > ")
+    </button>
+
+    <button @onclick="OnLastClicked" @attributes="NextButtonAttributes">
+        @(" >| ")
+    </button>
+
+</div>
+@code
+{
+    [Parameter] public MetaData? Meta { get; set; }
+    [Parameter]	public required ArtikelRequestParams Params { get; set; }
+    [Parameter] public EventCallback<ArtikelRequestParams> OnPageChanged { get; set; }
+
+    private bool LoadingPrevious { get; set; }
+    private bool LoadingNext { get; set; }
+
+    private Dictionary<string, object?> PreviousButtonAttributes =>
+    (LoadingPrevious || !(Meta?.HasPrevious ?? false))
+        ? new() { { "disabled", "disabled" } }
+        : new();
+
+    private Dictionary<string, object?> NextButtonAttributes =>
+    (LoadingNext || !(Meta?.HasNext ?? false))
+    ? new() { { "disabled", "disabled" } }
+    : new();
+
+    private async Task OnFirstClicked()
+    {
+        if (Meta is null || !Meta.HasPrevious) return;
+
+        LoadingPrevious = true;
+        StateHasChanged();
+		Params.PageNumber = 1;
+        await OnPageChanged.InvokeAsync(Params);
+
+        LoadingPrevious = false;
+        StateHasChanged();
+    }
+
+    private async Task OnPreviousClicked()
+    {
+        if (Meta is null || !Meta.HasPrevious) return;
+
+        LoadingPrevious = true;
+        StateHasChanged();
+
+		Params.PageNumber = Meta.CurrentPage - 1;
+        await OnPageChanged.InvokeAsync(Params);
+
+        LoadingPrevious = false;
+        StateHasChanged();
+    }
+
+    private async Task OnNextClicked()
+    {
+        if (Meta is null || !Meta.HasNext) return;
+
+        LoadingNext = true;
+        StateHasChanged();
+
+        Params.PageNumber = Meta.CurrentPage + 1;
+        await OnPageChanged.InvokeAsync(Params);
+
+        LoadingNext = false;
+        StateHasChanged();
+    }
+
+    private async Task OnLastClicked()
+    {
+        if (Meta is null || !Meta.HasNext) return;
+
+        LoadingNext = true;
+        StateHasChanged();
+
+        Params.PageNumber = Meta.TotalPages;
+        await OnPageChanged.InvokeAsync(Params);
+
+        LoadingNext = false;
+        StateHasChanged();
+    }
+
+
+}
